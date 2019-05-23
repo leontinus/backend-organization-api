@@ -1,1 +1,5 @@
+# Ignore env file
 *.env
+
+# Ignore config folder
+config/
