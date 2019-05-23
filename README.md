@@ -526,7 +526,13 @@ We are now ready to tests for our HTTP endpoints using [Postman](https://www.get
 
     Here you can see all the comments that is from the particular organization , and this will only return the result if the isDeleted flag is false.
 
-5. Next we are deleting the comments from a particular organization and by deleting here is to "soft delete" so that the GET request will return zero result but we can still search it in the database
+5. Here we will test to add a comment for a particular organization
+
+![alt text](./images/addComments.png "POST request to add comments of an organization")
+
+    This will result of res sending status 200 with message saying Comments added!
+
+6. Next we are deleting the comments from a particular organization and by deleting here is to "soft delete" so that the GET request will return zero result but we can still search it in the database
 
 ![alt text](./images/deleteComments.png "DELETE request to delete comments of an organization")
 
@@ -534,14 +540,14 @@ We are now ready to tests for our HTTP endpoints using [Postman](https://www.get
 
 ![alt text](./images/afterDelComments.png "GET request to retrieve comments from 1 organization")
 
-6. Lastly we will be running test to see all the members of an organization and ordered in a descending order based on number of followers they have
+7. Lastly we will be running test to see all the members of an organization and ordered in a descending order based on number of followers they have
 
 ![alt text](./images/members.png "GET request to retrieve members from 1 organization")
 
     As a result you can see that the members are returned in a descending order based on the followers number and in JSON format.
 
 # Important 
-Please add .gitignore and insert `.env` so that when publish for public repo it will not be included
+Please add .gitignore and insert `.env` so that when publish for github public repo, it will not be included
 
 # Built With
 * Node.js
