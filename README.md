@@ -540,6 +540,9 @@ We are now ready to tests for our HTTP endpoints using [Postman](https://www.get
 
     As a result you can see that the members are returned in a descending order based on the followers number and in JSON format.
 
+# Important 
+Please add .gitignore and insert `.env` so that when publish for public repo it will not be included
+
 # Built With
 * Node.js
 * Express.js
