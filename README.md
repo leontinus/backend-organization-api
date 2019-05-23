@@ -244,5 +244,256 @@ infoRoutes.route('/:name/members').get((req, res)=>{
     })  
 });
 ```
+We will create a one(1) endpoint for the comments for a particular organization which will be handling HTTP requests for GET, POST and DELETE. The same as before we will be using name to search for the organization :
 
+```javascript
+infoRoutes.all('/:name/comments', (req, res)=>{
+    if(req.method === 'GET'){
+        // retrieve all the comment registered against the organization
+        let name = req.params.name;
+        organization.find(
+            {
+                $and: [
+                    {name: new RegExp('^' + name + '$', "i")}, 
+                    {'isDeleted': false} 
+                ]
+            }, 
+            {'_id': 0,'comments': 1, 'isDeleted': 1}, 
+            (err, org)=>{
+                res.json(org);
+            }
+        );
+    }else if (req.method === 'POST'){
+        // add new comment for an organization
+        organization.findOneAndUpdate(
+            {name: new RegExp('^' + req.params.name + '$', "i")},
+            {$push: {
+                'comments': req.body.comments
+                }
+            },
+            {safe: true, upsert: true},
+            (err, org)=>{
+                if(err){
+                    console.log(err);
+                }else{
+                    res.status(200).send('Comments added!');
+                }
+            }
+        );
+    }else if(req.method === 'DELETE'){
+        // soft delete
+        organization.findOneAndUpdate(
+            {name: new RegExp('^' + req.params.name + '$', "i")},
+            {$set: {
+                'isDeleted': true
+                }
+            },
+            {safe: true, upsert: true},
+            (err, org)=>{
+                if(err){
+                    console.log(err);
+                }else{
+                    res.status(200).send('Comments deleted!');
+                }
+            }
+        );
+    }
+})
+```
 
+Here you can see that all of the request are accessing the same endpoint, and we will check what type of request it is based on *req.method*. In DELETE request, we are not actually removing it from the document (mongoDB) instead we are trying to achieve a "soft delete" which we are updating the flag (defined in the mongoose schema we created) and it will not return any comments from that particular organization when the flag (isDeleted) has set to true. This is so that later on there are available for emergency retrieval. 
+
+### Securing the sensitive information
+From the code you can see that there is a dependency that is called dotenv. This is so that the module can load environment variables from a `.env` file into `process.env`.
+In the root of your project folder, create a `.env` file and insert as follow :
+
+```env
+NODE_ENV=development
+app_port=5000
+host=localhost
+db_port=27017
+db_name=organization
+db_user= <your username created in the beginning>
+db_pass= <your password>
+```
+
+From the **server.js** you can access the information stored in the `.env` file by accessing thru javascript `process.env` :
+
+```javascript
+dotenv.config();
+
+var options = {
+    user: process.env.db_user,
+    pass: process.env.db_pass
+}
+```
+
+And from mongoose you can see that the information is not revealed but rather just access thru the variables :
+
+```javascript
+mongoose.connect(`mongodb://${options.user}:${options.pass}@${process.env.host}:${process.env.db_port}/${process.env.db_name}`, {useNewUrlParser: true});
+```
+
+Finally, in the following you can see the complete code of server.js and organization.model.js :
+
+```javascript
+// server.js
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+dotenv.config();
+app.use(cors());
+app.use(bodyParser.json());
+
+// database
+var options = {
+    user: process.env.db_user,
+    pass: process.env.db_pass
+}
+mongoose.connect(`mongodb://${options.user}:${options.pass}@${process.env.host}:${process.env.db_port}/${process.env.db_name}`, {useNewUrlParser: true});
+const connection = mongoose.connection;
+connection.once('open', ()=>{
+    console.log('MongoDB database connection established successfully')
+})
+
+// app
+app.listen(process.env.app_port, ()=>{
+    console.log(`Server is running on port ${process.env.app_port}`);
+})
+
+// server endpoints
+const infoRoutes = express.Router();
+let organization = require('./organization.model');
+app.use('/orgs', infoRoutes);
+
+// retrieve list of all user from all organization 
+infoRoutes.route('/').get((req, res)=>{
+    organization.find((err, org)=>{
+        if(err){
+            console.log(err);
+        }else{
+            res.json(org);
+        }
+    });
+});
+
+// retrieve the information of an organization
+infoRoutes.route('/:name').get((req, res)=>{
+    let name = req.params.name;
+    organization.find({name: new RegExp('^' + name + '$', "i")}, (err, org)=>{
+        res.json(org);
+    });
+})
+
+// retrieve all the members of an organization ordered by number of followers 
+// in descending order
+infoRoutes.route('/:name/members').get((req, res)=>{
+    let name = req.params.name;
+    organization.aggregate([
+        {"$unwind": "$member"},
+        {"$match": {"name": name}},
+        {"$sort": {"member.followers": -1}},
+        {"$group": {
+            "_id": "$_id",
+            "member": {
+                "$push": "$member"
+            }
+        }}
+    ]).exec((err, org)=>{
+        res.json(org);
+    })  
+});
+
+infoRoutes.all('/:name/comments', (req, res)=>{
+    if(req.method === 'GET'){
+        // retrieve all the comment registered against the organization
+        let name = req.params.name;
+        organization.find(
+            {
+                $and: [
+                    {name: new RegExp('^' + name + '$', "i")}, 
+                    {'isDeleted': false} 
+                ]
+            }, 
+            {'_id': 0,'comments': 1, 'isDeleted': 1}, 
+            (err, org)=>{
+                res.json(org);
+            }
+        );
+    }else if (req.method === 'POST'){
+        // add new comment for an organization
+        organization.findOneAndUpdate(
+            {name: new RegExp('^' + req.params.name + '$', "i")},
+            {$push: {
+                'comments': req.body.comments
+                }
+            },
+            {safe: true, upsert: true},
+            (err, org)=>{
+                if(err){
+                    console.log(err);
+                }else{
+                    res.status(200).send('Comments added!');
+                }
+            }
+        );
+    }else if(req.method === 'DELETE'){
+        // soft delete
+        organization.findOneAndUpdate(
+            {name: new RegExp('^' + req.params.name + '$', "i")},
+            {$set: {
+                'isDeleted': true
+                }
+            },
+            {safe: true, upsert: true},
+            (err, org)=>{
+                if(err){
+                    console.log(err);
+                }else{
+                    res.status(200).send('Comments deleted!');
+                }
+            }
+        );
+    }
+})
+
+// add new organization
+infoRoutes.route('/add').post((req, res)=>{
+    let org = new organization(req.body);
+    org.save()
+        .then(org=>{
+            res.status(200).json({'Organization': 'Successfully added'});
+        })
+        .catch(err=>{
+            res.status(400).send('Adding new organization failed');
+        });
+});
+```
+
+```javascript
+// organization.model.js for mongoose schema
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+let organization = new Schema({
+    name: {type: String},
+    comments: [{type: String}],
+    member: [{
+        username: String,
+        followers: Number,
+        following: Number,
+        avatar: String,
+        active: Boolean
+    }],
+    isDeleted: {
+        type: Boolean,
+        default: false
+    }
+});
+
+module.exports = mongoose.model('organization', organization);
+```
