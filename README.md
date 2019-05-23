@@ -499,7 +499,7 @@ module.exports = mongoose.model('organization', organization);
 ```
 
 ## Testing the server API with Postman
-We are now ready to tests for our HTTP endpoints using [Postman]((https://www.getpostman.com/) tool.
+We are now ready to tests for our HTTP endpoints using [Postman](https://www.getpostman.com/) tool.
 
 1. First let's add an organization to the database by sending a POST request
 
@@ -532,7 +532,7 @@ We are now ready to tests for our HTTP endpoints using [Postman]((https://www.ge
 
     As a result when trying to GET request the comments after deleting will result as follow 
 
-![alt text](./images/afterDelComment.png "GET request to retrieve comments from 1 organization")
+![alt text](./images/afterDelComments.png "GET request to retrieve comments from 1 organization")
 
 6. Lastly we will be running test to see all the members of an organization and ordered in a descending order based on number of followers they have
 
