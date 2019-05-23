@@ -497,3 +497,50 @@ let organization = new Schema({
 
 module.exports = mongoose.model('organization', organization);
 ```
+
+## Testing the server API with Postman
+We are now ready to tests for our HTTP endpoints using [Postman]((https://www.getpostman.com/) tool.
+
+1. First let's add an organization to the database by sending a POST request
+
+
+![alt text](./images/addOrganization.png "POST request to add organization")
+
+As a result we're getting a returned JSON object that has a message: *Successfully added* 
+
+2. Next we will be retrieving all the information that are stored in the MongoDB collection
+
+![alt text](./images/retrieveAllData.png "GET request to retrieve all organization")
+
+What you will see is a JSON format result of all the data/information that are stored in the database
+
+3. We will now narrow down to search for a particular organization 
+
+![alt text](./images/get1Org.png "GET request to retrieve 1 organization")
+
+This will retrieve only 1 result of the organization that we searched
+
+4. To narrow down even further we can test out the endpoint for find the comments from a particluar organization
+
+![alt text](./images/getComent.png "GET request to retrieve comments from 1 organization")
+
+Here you can see all the comments that is from the particular organization , and this will only return the result if the isDeleted flag is false.
+
+5. Next we are deleting the comments from a particular organization and by deleting here is to "soft delete" so that the GET request will return zero result but we can still search it in the database
+
+![alt text](./images/deleteComments.png "DELETE request to delete comments of an organization")
+
+As a result when trying to GET request the comments after deleting will result as follow 
+
+![alt text](./images/afterDelComment.png "GET request to retrieve comments from 1 organization")
+
+6. Lastly we will be running test to see all the members of an organization and ordered in a descending order based on number of followers they have
+
+![alt text](./images/members.png "GET request to retrieve members from 1 organization")
+
+As a result you can see that the members are returned in a descending order based on the followers number and in JSON format.
+
+# Built With
+* Node.js
+* Express.js
+* MongoDB
